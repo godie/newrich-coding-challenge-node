@@ -2,3 +2,4 @@ api/node_modules
 api/dist
 api/coverage
 *.log
+web/node_modules

@@ -1,6 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ItemsService, ListItemsQuery } from './items.service';
-import { ItemRecord } from './data';
+import { ItemsService } from './items.service';
+import { ListItemsQuery } from './items-query.mapper';
+import { ItemRecord } from './item-record';
 
 @Controller()
 export class ItemsController {

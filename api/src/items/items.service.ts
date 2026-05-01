@@ -1,61 +1,51 @@
 import { Injectable } from '@nestjs/common';
-import { ITEMS_DATA, ItemRecord } from './data';
-
-export type ListItemsQuery = {
-  active?: string;
-  search?: string;
-  category?: string;
-  sortBy?: string;
-  sortDirection?: string;
-};
+import { ItemRecord, SortField } from './item-record';
+import { ItemsRepository } from './items.repository';
+import { ListItemsQuery, normalizeQuery } from './items-query.mapper';
 
 @Injectable()
 export class ItemsService {
-  private readonly items: ItemRecord[] = [...ITEMS_DATA];
+  constructor(private readonly repository: ItemsRepository) {}
 
   listItems(query: ListItemsQuery): ItemRecord[] {
-    let results = [...this.items];
+    const { active, search, category, sortBy, sortDirection } =
+      normalizeQuery(query);
+    const dir = sortDirection === 'desc' ? -1 : 1;
 
-    // Intentionally permissive parsing to leave room for candidate improvements.
-    if (query.active !== undefined && query.active !== 'all') {
-      const activeValue = query.active === 'true';
-      results = results.filter((item) => item.active === activeValue);
-    }
+    const results = this.repository.findAll().filter((item) => {
+      if (active !== undefined && active !== 'all') {
+        if (item.active !== (active === 'true')) return false;
+      }
 
-    if (query.search) {
-      const term = query.search.toLowerCase();
-      results = results.filter((item) => item.name.toLowerCase().includes(term));
-    }
+      if (category && item.category !== category) {
+        return false;
+      }
 
-    if (query.category) {
-      results = results.filter((item) => item.category === query.category);
-    }
+      if (search && !item.name.toLowerCase().includes(search)) {
+        return false;
+      }
 
-    const sortBy = query.sortBy || 'order';
-    const sortDirection = query.sortDirection === 'desc' ? -1 : 1;
+      return true;
+    });
 
-    results.sort((a, b) => {
+    return results.sort((a, b) => {
       const left = this.getSortableValue(a, sortBy);
       const right = this.getSortableValue(b, sortBy);
 
-      if (left < right) {
-        return -1 * sortDirection;
-      }
-      if (left > right) {
-        return 1 * sortDirection;
-      }
-      return 0;
+      if (left === right) return 0;
+      return left < right ? -1 * dir : 1 * dir;
     });
-
-    return results;
   }
 
-  private getSortableValue(item: ItemRecord, sortBy: string): string | number | boolean {
-    const value = (item as unknown as Record<string, string | number | boolean>)[sortBy];
-    if (value === undefined) {
-      return item.order;
-    }
-
+  private getSortableValue(
+    item: ItemRecord,
+    sortBy: SortField,
+  ): string | number {
+    const value = item[sortBy];
+    // Convert boolean to number for explicit, predictable sorting:
+    // active=true → 1, active=false → 0
+    // Ascending puts inactive (0) first; descending puts active (1) first.
+    if (typeof value === 'boolean') return value ? 1 : 0;
     return value;
   }
 }

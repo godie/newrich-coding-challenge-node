@@ -1,11 +1,4 @@
-export type ItemRecord = {
-  id: number;
-  name: string;
-  active: boolean;
-  category: string;
-  score: number;
-  order: number;
-};
+import { ItemRecord } from './item-record';
 
 export const ITEMS_DATA: ItemRecord[] = [
   { id: 1, name: 'Alpha', active: true, category: 'core', score: 30, order: 1 },

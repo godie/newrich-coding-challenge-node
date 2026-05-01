@@ -9,6 +9,7 @@
     "target": "es2019",
     "sourceMap": true,
     "outDir": "./dist",
+    "rootDir": "./src",
     "incremental": true,
     "strict": true,
     "skipLibCheck": true,
@@ -19,8 +20,7 @@
     ]
   },
   "include": [
-    "src/**/*.ts",
-    "jest.config.ts"
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules",
